@@ -1,0 +1,4 @@
+# embed 产物由 scripts/build_web.cjs 生成并复制，提交以保证 go build 开箱可用。
+!mytun-web.js
+!index.html
+!style.css

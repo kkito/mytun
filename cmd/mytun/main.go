@@ -33,6 +33,7 @@ func main() {
 	mtu := flag.Int("mtu", 1420, "MTU")
 	echoOn := flag.Bool("echo", true, "是否自动回 ICMP echo reply")
 	webAddr := flag.String("web", ":8080", "Web 面板监听地址，空字符串关闭")
+	webRoot := flag.String("web-root", "", "Web 面板静态目录（dev 模式从文件读，默认用内嵌产物）")
 	flag.Parse()
 
 	prefix, err := netip.ParsePrefix(*addr)
@@ -76,6 +77,7 @@ func main() {
 
 	if *webAddr != "" {
 		gin.SetMode(gin.ReleaseMode)
+		web.WebRoot = *webRoot
 		go func() {
 			if err := web.NewRouter(m, "dev").Run(*webAddr); err != nil {
 				log.Fatalf("web 启动失败: %v", err)

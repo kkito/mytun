@@ -22,7 +22,13 @@ func NewRouter(m *tunmgr.Manager, version string) *gin.Engine {
 	r.Use(gin.Recovery())
 
 	r.GET("/", func(c *gin.Context) {
-		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(indexPlaceholder))
+		serveFile(c, "index.html", "text/html; charset=utf-8")
+	})
+	r.GET("/mytun-web.js", func(c *gin.Context) {
+		serveFile(c, "mytun-web.js", "application/javascript")
+	})
+	r.GET("/style.css", func(c *gin.Context) {
+		serveFile(c, "style.css", "text/css; charset=utf-8")
 	})
 	r.GET("/healthz", func(c *gin.Context) {
 		ok(c, gin.H{"status": "ok"})
