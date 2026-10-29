@@ -3,3 +3,4 @@ build/
 *.test
 .idea/
 .vscode/
+web/node_modules/
