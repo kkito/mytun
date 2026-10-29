@@ -17,7 +17,12 @@ import (
 
 	"mytun/internal/echo"
 	"mytun/internal/netconf"
+	"mytun/internal/packet"
 	"mytun/internal/tun"
+	"mytun/internal/tunmgr"
+	"mytun/internal/web"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -27,6 +32,7 @@ func main() {
 	addr := flag.String("addr", "10.10.0.1/24", "TUN 地址，CIDR 格式，仅 IPv4")
 	mtu := flag.Int("mtu", 1420, "MTU")
 	echoOn := flag.Bool("echo", true, "是否自动回 ICMP echo reply")
+	webAddr := flag.String("web", ":8080", "Web 面板监听地址，空字符串关闭")
 	flag.Parse()
 
 	prefix, err := netip.ParsePrefix(*addr)
@@ -61,17 +67,36 @@ func main() {
 		os.Exit(0)
 	}()
 
+	// 地址已由启动流程配好（ConfigAddr 见下），manager 仅标记 up 状态，
+	// 不再经 configurer 重复配地址。
+	m := tunmgr.New(t, nil)
+	if _, err := m.Create(*addr, *mtu); err != nil {
+		log.Fatalf("manager 标记 up 失败: %v", err)
+	}
+
+	if *webAddr != "" {
+		gin.SetMode(gin.ReleaseMode)
+		go func() {
+			if err := web.NewRouter(m, "dev").Run(*webAddr); err != nil {
+				log.Fatalf("web 启动失败: %v", err)
+			}
+			}()
+		log.Printf("Web 面板监听: %s", *webAddr)
+	}
+
 	buf := make([]byte, 65535)
 	for {
 		n, err := t.Read(buf)
 		if err != nil {
 			log.Fatalf("read: %v", err)
 		}
-		handlePacket(t, buf[:n], *echoOn)
+		m.AddRx(n)
+		m.PushLog("rx", packet.ParseSummary(buf[:n]))
+		handlePacket(t, m, buf[:n], *echoOn)
 	}
 }
 
-func handlePacket(t *tun.TUN, pkt []byte, echoOn bool) {
+func handlePacket(t *tun.TUN, m *tunmgr.Manager, pkt []byte, echoOn bool) {
 	if len(pkt) < 20 {
 		log.Printf("短包 len=%d", len(pkt))
 		return
@@ -89,6 +114,8 @@ func handlePacket(t *tun.TUN, pkt []byte, echoOn bool) {
 			if _, err := t.Write(reply); err != nil {
 				log.Printf("TX echo reply 失败: %v", err)
 			} else {
+				m.AddTx(len(reply))
+				m.PushLog("tx", packet.ParseSummary(reply))
 				log.Printf("TX echo reply -> %s", src)
 			}
 		}
