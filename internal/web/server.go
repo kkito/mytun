@@ -13,9 +13,6 @@ import (
 	"mytun/internal/tunmgr"
 )
 
-// indexPlaceholder 是 `/` 的占位页面，Task 5 替换为 embed 打包产物。
-const indexPlaceholder = `<!doctype html><html><head><meta charset="utf-8"><title>mytun</title></head><body><h1>mytun web panel</h1></body></html>`
-
 // NewRouter 构造 Gin 引擎。version 写入 status/version 字段。
 func NewRouter(m *tunmgr.Manager, version string) *gin.Engine {
 	r := gin.New()
