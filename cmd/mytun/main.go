@@ -10,6 +10,7 @@ import (
 	"flag"
 	"log"
 	"net"
+	"net/http"
 	"net/netip"
 	"os"
 	"os/signal"
@@ -21,8 +22,6 @@ import (
 	"mytun/internal/tun"
 	"mytun/internal/tunmgr"
 	"mytun/internal/web"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -76,10 +75,10 @@ func main() {
 	}
 
 	if *webAddr != "" {
-		gin.SetMode(gin.ReleaseMode)
 		web.WebRoot = *webRoot
+		srv := &http.Server{Addr: *webAddr, Handler: web.NewRouter(m, "dev")}
 		go func() {
-			if err := web.NewRouter(m, "dev").Run(*webAddr); err != nil {
+			if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 				log.Fatalf("web 启动失败: %v", err)
 			}
 		}()

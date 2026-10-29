@@ -9,12 +9,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-
 	"mytun/internal/tunmgr"
 )
-
-func init() { gin.SetMode(gin.TestMode) }
 
 type fakeDevice struct {
 	mu       sync.Mutex
@@ -48,13 +44,13 @@ func (f *fakeDevice) writeCount() int {
 	return len(f.written)
 }
 
-func newTestRouter() (*tunmgr.Manager, *fakeDevice, *gin.Engine) {
+func newTestRouter() (*tunmgr.Manager, *fakeDevice, *http.ServeMux) {
 	dev := &fakeDevice{name: "utun9"}
 	m := tunmgr.New(dev, func(ifname string) error { return nil })
 	return m, dev, NewRouter(m, "test")
 }
 
-func doReq(r *gin.Engine, method, path, body string) *httptest.ResponseRecorder {
+func doReq(r *http.ServeMux, method, path, body string) *httptest.ResponseRecorder {
 	var reader *strings.Reader
 	if body == "" {
 		reader = strings.NewReader("")
