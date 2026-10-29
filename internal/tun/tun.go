@@ -30,18 +30,29 @@ func (t *TUN) ActualName() (string, error) { return t.dev.Name() }
 
 func (t *TUN) Read(p []byte) (int, error) {
 	// wireguard-go 新版是批量 API：Read(bufs, sizes, offset)，返回包数。
-	bufs := [][]byte{p}
+	// macOS utun 要求 offset>=4：库把 4 字节 AF 头写在 buf[offset-4:offset]，
+	// IP 包放在 buf[offset:]。这里内部留头，copy 回调用方，保持“纯 IP 包”语义。
+	full := make([]byte, len(p)+4)
+	bufs := [][]byte{full}
 	sizes := []int{0}
-	n, err := t.dev.Read(bufs, sizes, 0)
+	n, err := t.dev.Read(bufs, sizes, 4)
 	if err != nil {
 		return 0, err
 	}
 	if n == 0 {
 		return 0, fmt.Errorf("read: no packet")
 	}
-	return sizes[0], nil
+	if sizes[0] > len(p) {
+		return 0, fmt.Errorf("read: packet %d bytes exceeds buffer %d", sizes[0], len(p))
+	}
+	return copy(p, full[4:4+sizes[0]]), nil
 }
 
-func (t *TUN) Write(p []byte) (int, error) { return t.dev.Write([][]byte{p}, 0) }
+func (t *TUN) Write(p []byte) (int, error) {
+	// 同上：Write(bufs, offset) 要求 offset>=4，库在 buf[offset-4:offset] 写 AF 头。
+	full := make([]byte, len(p)+4)
+	copy(full[4:], p)
+	return t.dev.Write([][]byte{full}, 4)
+}
 
 func (t *TUN) Close() error { return t.dev.Close() }
