@@ -7,6 +7,7 @@ import (
 )
 
 // TUN 统一接口：Read/Write 都是纯 IP 包（已剥掉各平台的附加包头）。
+// Linux 走 /dev/net/tun，macOS 走 utun（wireguard-go 已处理 utun 4 字节 AF 头）。
 type TUN struct {
 	dev wgTun.Device
 }
@@ -16,17 +17,14 @@ func Create(name string, mtu int) (*TUN, error) {
 	if err != nil {
 		return nil, fmt.Errorf("create tun %q: %w", name, err)
 	}
-	// wireguard-go 的 fd 消费模型是事件驱动的，但 Device 本身
-	// 也提供 file-based Read/Write（Linux/Darwin 都有实现）。
 	return &TUN{dev: dev}, nil
 }
 
-// ActualName 返回内核实际分配到的接口名（传 "utun" 会自动分配 utunN）。
+// ActualName 返回内核实际分配到的接口名（macOS 传 "utun" 会自动分配 utunN）。
 func (t *TUN) ActualName() (string, error) { return t.dev.Name() }
 
 func (t *TUN) Read(p []byte) (int, error) {
 	// wireguard-go 新版是批量 API：Read(bufs, sizes, offset)，返回包数。
-	// Darwin/Linux 的实现都已处理好包头，这里只取 1 个包。
 	bufs := [][]byte{p}
 	sizes := []int{0}
 	n, err := t.dev.Read(bufs, sizes, 0)
