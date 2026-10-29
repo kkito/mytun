@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-ADDR="${1:-10.10.0.1/24}"
+ADDR="${1:-172.30.0.1/24}"
 IP="${ADDR%%/*}"
 IMG="debian:bookworm-slim"
 NAME="mytun-e2e-$$"

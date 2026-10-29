@@ -1,7 +1,7 @@
 // Command mytun 是建卡 + 读写 IP 包的 demo（需 root）。
 //
-//	macOS: sudo mytun --addr 10.10.0.1/24
-//	Linux: sudo mytun --name mytun0 --addr 10.10.0.1/24
+//	macOS: sudo mytun --addr 172.30.0.1/24
+//	Linux: sudo mytun --name mytun0 --addr 172.30.0.1/24
 //
 // 另开终端 ping tun 地址即可看到抓包；默认 --echo 会回 ICMP echo reply。
 package main
@@ -28,7 +28,7 @@ func main() {
 	log.SetFlags(log.Ltime | log.Lmicroseconds)
 
 	name := flag.String("name", "", "接口名（macOS 建议留空自动分配 utunN；Linux 如 mytun0）")
-	addr := flag.String("addr", "10.10.0.1/24", "TUN 地址，CIDR 格式，仅 IPv4")
+	addr := flag.String("addr", "172.30.0.1/24", "TUN 地址，CIDR 格式，仅 IPv4")
 	mtu := flag.Int("mtu", 1420, "MTU")
 	echoOn := flag.Bool("echo", true, "是否自动回 ICMP echo reply")
 	webAddr := flag.String("web", ":8080", "Web 面板监听地址，空字符串关闭")
@@ -37,7 +37,7 @@ func main() {
 
 	prefix, err := netip.ParsePrefix(*addr)
 	if err != nil || !prefix.Addr().Is4() {
-		log.Fatalf("addr 必须是 IPv4 CIDR，如 10.10.0.1/24: %v", err)
+		log.Fatalf("addr 必须是 IPv4 CIDR，如 172.30.0.1/24: %v", err)
 	}
 
 	t, err := tun.Create(*name, *mtu)

@@ -43,6 +43,6 @@ linux-shell: ## 进 Linux 容器手动玩
 		-v $(PWD)/$(DIST):/dist $(LINUX_IMG) bash
 
 darwin-run: build ## macOS 本地跑（需 sudo，会提示密码）
-	sudo ./$(DIST)/$(BIN) --addr 10.10.0.1/24
+	sudo ./$(DIST)/$(BIN) --addr 172.30.0.1/24
 
 LINUX_IMG := debian:bookworm-slim

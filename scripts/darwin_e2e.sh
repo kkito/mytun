@@ -6,7 +6,7 @@ cd "$(dirname "$0")/.."
 
 if [ "$(id -u)" != "0" ]; then echo "请用 sudo 跑：sudo $0"; exit 1; fi
 
-ADDR="${1:-10.10.0.1/24}"
+ADDR="${1:-172.30.0.1/24}"
 IP="${ADDR%%/*}"
 
 echo "==> build darwin binary"
