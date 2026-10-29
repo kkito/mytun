@@ -2,6 +2,7 @@ package tun
 
 import (
 	"fmt"
+	"runtime"
 
 	wgTun "golang.zx2c4.com/wireguard/tun"
 )
@@ -13,6 +14,10 @@ type TUN struct {
 }
 
 func Create(name string, mtu int) (*TUN, error) {
+	if name == "" && runtime.GOOS == "darwin" {
+		// macOS wireguard-go 只接受 "utun"（自动分配 utunN）或 "utunN"。
+		name = "utun"
+	}
 	dev, err := wgTun.CreateTUN(name, mtu)
 	if err != nil {
 		return nil, fmt.Errorf("create tun %q: %w", name, err)
