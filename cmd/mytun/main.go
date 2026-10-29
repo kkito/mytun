@@ -80,7 +80,7 @@ func main() {
 			if err := web.NewRouter(m, "dev").Run(*webAddr); err != nil {
 				log.Fatalf("web 启动失败: %v", err)
 			}
-			}()
+		}()
 		log.Printf("Web 面板监听: %s", *webAddr)
 	}
 

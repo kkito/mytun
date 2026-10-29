@@ -24,7 +24,7 @@ type fakeDevice struct {
 	writeErr error
 }
 
-func (f *fakeDevice) Read(p []byte) (int, error)  { return 0, errors.New("no packet") }
+func (f *fakeDevice) Read(p []byte) (int, error) { return 0, errors.New("no packet") }
 func (f *fakeDevice) Write(p []byte) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
